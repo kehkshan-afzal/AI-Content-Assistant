@@ -5,7 +5,8 @@ from google import genai
 from google.genai import types
 
 
-model = genai.GenerativeModel("gemini-3.6-flash")
+MODEL_NAME = "gemini-3.6-flash"
+
 
 CONTENT_TYPES = [
     "Social media post",
@@ -18,6 +19,7 @@ CONTENT_TYPES = [
     "Product launch post",
 ]
 
+
 PLATFORMS = [
     "Instagram",
     "Facebook",
@@ -27,6 +29,7 @@ PLATFORMS = [
     "Pinterest",
     "General",
 ]
+
 
 TONES = [
     "Friendly",
@@ -39,6 +42,7 @@ TONES = [
     "Luxury",
 ]
 
+
 st.set_page_config(
     page_title="AI Content Assistant",
     page_icon="✍️",
@@ -47,7 +51,8 @@ st.set_page_config(
 
 
 def get_api_key():
-    """Read the Gemini API key from Streamlit secrets or an environment variable."""
+    """Get Gemini API key from Streamlit Secrets or environment variable."""
+
     try:
         if "GEMINI_API_KEY" in st.secrets:
             return st.secrets["GEMINI_API_KEY"]
@@ -57,14 +62,21 @@ def get_api_key():
     return os.getenv("GEMINI_API_KEY")
 
 
-def generate_content(content_type, platform, topic, audience, tone):
-    """Generate a complete social-media post with caption and hashtags."""
+def generate_content(
+    content_type,
+    platform,
+    topic,
+    audience,
+    tone,
+):
+    """Generate a social media post using Gemini."""
+
     api_key = get_api_key()
 
     if not api_key:
         raise ValueError(
-            "Gemini API key not found. Add GEMINI_API_KEY to Streamlit Secrets "
-            "or set it as an environment variable."
+            "Gemini API key not found. "
+            "Add GEMINI_API_KEY to Streamlit Secrets."
         )
 
     client = genai.Client(api_key=api_key)
@@ -72,7 +84,9 @@ def generate_content(content_type, platform, topic, audience, tone):
     prompt = f"""
 You are an expert social media content writer.
 
-Create ONE complete, ready-to-publish piece of content using these requirements:
+Create ONE complete, ready-to-publish piece of content.
+
+Requirements:
 
 Content type: {content_type}
 Platform: {platform}
@@ -80,23 +94,26 @@ Topic: {topic}
 Target audience: {audience}
 Tone: {tone}
 
-Return the answer in exactly this structure:
+Return the response using exactly these sections:
 
 POST:
-[The main post copy. Make it engaging, natural, useful, and appropriate for the selected platform.]
+[Write the main post.]
 
 CAPTION:
-[A polished caption that can be posted with the content. Keep it concise unless the platform normally supports longer captions.]
+[Write a polished caption.]
 
 HASHTAGS:
-[8-12 relevant hashtags, each starting with #]
+[Write 8-12 relevant hashtags.]
 
 Rules:
+- Make the content engaging and natural.
+- Match the selected platform.
+- Match the selected audience.
+- Match the selected tone.
 - Do not mention that you are an AI.
-- Do not use fake statistics, unsupported claims, or invented facts.
-- Match the selected tone and audience.
-- Avoid unnecessary emojis. Use a few only when they fit the platform and tone.
-- Do not add headings other than POST:, CAPTION:, and HASHTAGS:.
+- Do not invent statistics or facts.
+- Avoid unnecessary emojis.
+- Keep the content ready to publish.
 """
 
     response = client.models.generate_content(
@@ -114,40 +131,68 @@ Rules:
     return response.text
 
 
+# -----------------------------
+# Streamlit UI
+# -----------------------------
+
 st.title("✍️ AI Content Assistant")
-st.write("Create ready-to-publish content with Google Gemini.")
+
+st.write(
+    "Create ready-to-publish social media content "
+    "with Google Gemini."
+)
 
 st.divider()
 
-content_type = st.selectbox("Content type", CONTENT_TYPES)
-platform = st.selectbox("Platform", PLATFORMS)
+
+content_type = st.selectbox(
+    "Content Type",
+    CONTENT_TYPES,
+)
+
+
+platform = st.selectbox(
+    "Platform",
+    PLATFORMS,
+)
+
 
 topic = st.text_input(
     "Topic",
     placeholder="e.g. skincare tips for busy women",
 )
 
+
 audience = st.text_input(
-    "Target audience",
+    "Target Audience",
     placeholder="e.g. women aged 20-35 interested in skincare",
 )
 
-tone = st.selectbox("Tone", TONES)
 
-generate_button = st.button(
+tone = st.selectbox(
+    "Tone",
+    TONES,
+)
+
+
+if st.button(
     "✨ Generate Content",
     type="primary",
     use_container_width=True,
-)
+):
 
-if generate_button:
     if not topic.strip():
         st.warning("Please enter a topic.")
+
     elif not audience.strip():
         st.warning("Please enter a target audience.")
+
     else:
+
         with st.spinner("Generating your content..."):
+
             try:
+
                 result = generate_content(
                     content_type=content_type,
                     platform=platform,
@@ -157,10 +202,11 @@ if generate_button:
                 )
 
                 st.success("Content generated successfully!")
+
                 st.markdown(result)
 
                 st.download_button(
-                    label="⬇️ Download Content",
+                    "⬇️ Download Content",
                     data=result,
                     file_name="generated_content.txt",
                     mime="text/plain",
@@ -168,7 +214,14 @@ if generate_button:
                 )
 
             except Exception as error:
-                st.error(f"Something went wrong: {error}")
+
+                st.error(
+                    f"Something went wrong: {error}"
+                )
+
 
 st.divider()
-st.caption(f"Powered by Google Gemini ({MODEL_NAME})")
+
+st.caption(
+    f"Powered by Google Gemini ({MODEL_NAME})"
+)
