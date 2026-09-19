@@ -2,10 +2,9 @@ import os
 
 import streamlit as st
 from google import genai
-from google.genai import types
 
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.6-flash"
 
 
 CONTENT_TYPES = [
@@ -51,7 +50,7 @@ st.set_page_config(
 
 
 def get_api_key():
-    """Get Gemini API key from Streamlit Secrets or environment variable."""
+    """Get Gemini API key from Streamlit Secrets."""
 
     try:
         if "GEMINI_API_KEY" in st.secrets:
@@ -69,7 +68,7 @@ def generate_content(
     audience,
     tone,
 ):
-    """Generate a social media post using Gemini."""
+    """Generate content using Gemini Interactions API."""
 
     api_key = get_api_key()
 
@@ -116,19 +115,17 @@ Rules:
 - Keep the content ready to publish.
 """
 
-    response = client.models.generate_content(
+    interaction = client.interactions.create(
         model=MODEL_NAME,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.8,
-            max_output_tokens=1000,
-        ),
+        input=prompt,
     )
 
-    if not response.text:
+    result = interaction.output_text
+
+    if not result:
         raise ValueError("Gemini returned an empty response.")
 
-    return response.text
+    return result
 
 
 # -----------------------------
