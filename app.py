@@ -5,7 +5,7 @@ from google import genai
 from google.genai import types
 
 
-MODEL_NAME = "gemini-2.5-flash"
+model = genai.GenerativeModel("gemini-3.6-flash")
 
 CONTENT_TYPES = [
     "Social media post",
